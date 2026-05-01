@@ -18,7 +18,7 @@ This repo contains a small Flask app that:
 ## Quick start
 
 ```bash
-cd /Applications/PythonProjects/RAG-migration-data
+cd <location of Python projects>
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
