@@ -38,67 +38,96 @@ class MigrationRAG:
         return RetrievalResult(answer=answer, contexts=contexts)
 
     def _build_answer(self, question: str, contexts: list[dict]) -> str:
+        flows = (
+            self.flows[self.flows["demographic"] == "both sexes"].copy()
+            if "demographic" in self.flows.columns
+            else self.flows
+        )
         year = self._extract_year(question)
         country = self._match_country(question)
+        mode = flows["mode"].iloc[0] if "mode" in flows.columns and not flows.empty else "bilateral"
 
         grounded_lines = []
         if year is not None:
-            yearly = self.flows[self.flows["year"] == year]
+            yearly = flows[flows["year"] == year]
             if not yearly.empty:
                 total = int(yearly["value"].sum())
                 grounded_lines.append(
                     f"For {year}, the normalized dataset totals {total:,} across all retained bilateral records."
                 )
 
-                top_corridors = (
-                    yearly.groupby(["origin", "destination"], as_index=False)["value"]
-                    .sum()
-                    .sort_values("value", ascending=False)
-                    .head(3)
-                )
-                if not top_corridors.empty:
-                    summary = "; ".join(
-                        f"{row.origin} -> {row.destination} ({int(row.value):,})"
-                        for row in top_corridors.itertuples(index=False)
+                if mode == "bilateral" and "origin" in yearly.columns:
+                    top_corridors = (
+                        yearly.groupby(["origin", "destination"], as_index=False)["value"]
+                        .sum()
+                        .sort_values("value", ascending=False)
+                        .head(3)
                     )
-                    grounded_lines.append(f"Top corridors in {year}: {summary}.")
+                    if not top_corridors.empty:
+                        summary = "; ".join(
+                            f"{row.origin} -> {row.destination} ({int(row.value):,})"
+                            for row in top_corridors.itertuples(index=False)
+                        )
+                        grounded_lines.append(f"Top corridors in {year}: {summary}.")
+                else:
+                    top_destinations = (
+                        yearly.groupby("destination", as_index=False)["value"]
+                        .sum()
+                        .sort_values("value", ascending=False)
+                        .head(3)
+                    )
+                    if not top_destinations.empty:
+                        summary = "; ".join(
+                            f"{row.destination} ({int(row.value):,})"
+                            for row in top_destinations.itertuples(index=False)
+                        )
+                        grounded_lines.append(f"Largest destination stocks in {year}: {summary}.")
 
         if country:
-            related = self.flows[
-                (self.flows["origin"].str.lower() == country.lower())
-                | (self.flows["destination"].str.lower() == country.lower())
-            ]
-            if not related.empty:
-                inbound = (
-                    related[related["destination"].str.lower() == country.lower()]
-                    .groupby("origin", as_index=False)["value"]
-                    .sum()
-                    .sort_values("value", ascending=False)
-                    .head(3)
-                )
-                outbound = (
-                    related[related["origin"].str.lower() == country.lower()]
-                    .groupby("destination", as_index=False)["value"]
-                    .sum()
-                    .sort_values("value", ascending=False)
-                    .head(3)
-                )
-                if not inbound.empty:
-                    grounded_lines.append(
-                        "Largest inbound links: "
-                        + "; ".join(
-                            f"{row.origin} ({int(row.value):,})" for row in inbound.itertuples(index=False)
-                        )
-                        + "."
+            if mode == "bilateral" and "origin" in flows.columns:
+                related = flows[
+                    (flows["origin"].str.lower() == country.lower())
+                    | (flows["destination"].str.lower() == country.lower())
+                ]
+                if not related.empty:
+                    inbound = (
+                        related[related["destination"].str.lower() == country.lower()]
+                        .groupby("origin", as_index=False)["value"]
+                        .sum()
+                        .sort_values("value", ascending=False)
+                        .head(3)
                     )
-                if not outbound.empty:
-                    grounded_lines.append(
-                        "Largest outbound links: "
-                        + "; ".join(
-                            f"{row.destination} ({int(row.value):,})"
-                            for row in outbound.itertuples(index=False)
+                    outbound = (
+                        related[related["origin"].str.lower() == country.lower()]
+                        .groupby("destination", as_index=False)["value"]
+                        .sum()
+                        .sort_values("value", ascending=False)
+                        .head(3)
+                    )
+                    if not inbound.empty:
+                        grounded_lines.append(
+                            "Largest inbound links: "
+                            + "; ".join(
+                                f"{row.origin} ({int(row.value):,})" for row in inbound.itertuples(index=False)
+                            )
+                            + "."
                         )
-                        + "."
+                    if not outbound.empty:
+                        grounded_lines.append(
+                            "Largest outbound links: "
+                            + "; ".join(
+                                f"{row.destination} ({int(row.value):,})"
+                                for row in outbound.itertuples(index=False)
+                            )
+                            + "."
+                        )
+            else:
+                related = flows[flows["destination"].str.lower() == country.lower()]
+                if not related.empty:
+                    by_year = related.sort_values("year")
+                    latest = by_year.iloc[-1]
+                    grounded_lines.append(
+                        f"The destination stock for {country} in {int(latest['year'])} is {int(latest['value']):,}."
                     )
 
         retrieved = " ".join(context["text"] for context in contexts[:3])
@@ -111,8 +140,13 @@ class MigrationRAG:
 
     def _match_country(self, text: str) -> str | None:
         lowered = text.lower()
-        countries = set(self.flows["origin"].dropna().tolist()) | set(
-            self.flows["destination"].dropna().tolist()
+        flows = (
+            self.flows[self.flows["demographic"] == "both sexes"].copy()
+            if "demographic" in self.flows.columns
+            else self.flows
+        )
+        countries = set(flows["origin"].dropna().tolist()) | set(
+            flows["destination"].dropna().tolist()
         )
         for country in sorted(countries, key=len, reverse=True):
             if country.lower() in lowered:

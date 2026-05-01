@@ -7,13 +7,16 @@
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <style>
       :root {
-        --bg: #eef2e3;
-        --panel: rgba(253, 250, 241, 0.95);
-        --ink: #14281d;
-        --muted: #52625b;
-        --accent: #bf4e30;
-        --accent-soft: #e8b08b;
-        --line: rgba(20, 40, 29, 0.14);
+        --bg: #0d1622;
+        --panel: rgba(18, 29, 43, 0.94);
+        --ink: #e7eef6;
+        --muted: #9fb0c2;
+        --accent: #5aa2e6;
+        --accent-soft: #84c2ff;
+        --line: rgba(125, 153, 181, 0.22);
+        --tile-water: #16334d;
+        --tile-land: #233746;
+        --tile-border: #5f7994;
       }
 
       * {
@@ -22,32 +25,29 @@
 
       body {
         margin: 0;
-        font-family: Georgia, "Times New Roman", serif;
+        font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
         color: var(--ink);
         background:
-          radial-gradient(circle at top left, rgba(191, 78, 48, 0.18), transparent 24%),
-          radial-gradient(circle at bottom right, rgba(31, 76, 58, 0.18), transparent 28%),
-          linear-gradient(180deg, #f5efe0 0%, var(--bg) 100%);
+          linear-gradient(180deg, #101b2a 0%, var(--bg) 100%);
       }
 
       .shell {
-        display: grid;
-        grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
-        gap: 20px;
+        display: block;
         min-height: 100vh;
-        padding: 24px;
+        padding: 18px;
       }
 
       .panel {
         background: var(--panel);
         border: 1px solid var(--line);
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(20, 40, 29, 0.08);
+        border-radius: 14px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
         overflow: hidden;
       }
 
       .panel-header {
-        padding: 22px 24px 12px;
+        padding: 20px 20px 10px;
+        text-align: center;
       }
 
       h1, h2, h3 {
@@ -56,7 +56,8 @@
       }
 
       h1 {
-        font-size: clamp(1.9rem, 2.8vw, 3rem);
+        font-size: clamp(2.15rem, 3.3vw, 3.45rem);
+        letter-spacing: -0.03em;
       }
 
       .lede {
@@ -64,13 +65,23 @@
         color: var(--muted);
         line-height: 1.5;
         max-width: 70ch;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .country-detail-name {
+        margin-top: 10px;
+        font-size: 1.28rem;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.02em;
       }
 
       .controls {
         display: flex;
         flex-wrap: wrap;
         gap: 12px;
-        padding: 0 24px 18px;
+        padding: 0 14px 14px;
       }
 
       label {
@@ -86,46 +97,51 @@
 
       select, textarea {
         border: 1px solid var(--line);
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 10px 12px;
-        background: #fffdf8;
+        background: #142132;
         color: var(--ink);
       }
 
       button {
-        border: 0;
-        border-radius: 12px;
-        background: var(--accent);
-        color: white;
+        border: 1px solid rgba(107, 146, 186, 0.24);
+        border-radius: 8px;
+        background: #162538;
+        color: var(--ink);
         padding: 11px 15px;
         cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
       }
 
       button:hover {
-        filter: brightness(1.05);
+        background: #1a2d43;
       }
 
       #map {
-        min-height: 680px;
+        min-height: 760px;
       }
 
-      .sidebar {
-        display: grid;
-        grid-template-rows: auto auto 1fr;
+      #corridor-map {
+        min-height: 340px;
+        border-top: 1px solid var(--line);
+      }
+
+      #country-chart {
+        min-height: 360px;
       }
 
       .stat-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
-        padding: 0 24px 18px;
+        padding: 8px 0 0;
       }
 
       .stat {
         border: 1px solid var(--line);
-        border-radius: 16px;
+        border-radius: 10px;
         padding: 14px;
-        background: rgba(255, 255, 255, 0.6);
+        background: rgba(25, 40, 58, 0.9);
       }
 
       .stat strong {
@@ -136,7 +152,70 @@
 
       .section {
         border-top: 1px solid var(--line);
-        padding: 18px 24px 24px;
+        padding: 18px 20px 22px;
+      }
+
+      .map-stack {
+        padding: 0 2px 10px;
+      }
+
+      .interactive-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 2.35fr) minmax(340px, 0.95fr);
+        gap: 18px;
+        padding: 0 14px 14px;
+        align-items: start;
+      }
+
+      .detail-rail {
+        position: sticky;
+        top: 18px;
+      }
+
+      .bottom-grid {
+        display: block;
+        padding: 0 18px 18px;
+      }
+
+      .subpanel {
+        background: rgba(19, 31, 46, 0.88);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .subpanel .section:first-child,
+      .subpanel .panel-header {
+        border-top: 0;
+      }
+
+      .table-wrap {
+        margin-top: 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: auto;
+        max-height: 420px;
+        background: rgba(20, 33, 49, 0.95);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+      }
+
+      th, td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+      }
+
+      th {
+        position: sticky;
+        top: 0;
+        background: #162538;
+        z-index: 1;
       }
 
       .list {
@@ -147,9 +226,9 @@
 
       .list-item {
         border: 1px solid var(--line);
-        border-radius: 14px;
+        border-radius: 10px;
         padding: 12px;
-        background: rgba(255, 255, 255, 0.56);
+        background: rgba(22, 37, 56, 0.95);
       }
 
       .muted {
@@ -168,15 +247,27 @@
         margin-top: 14px;
       }
 
+      .inline-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
       .context {
         padding: 12px;
         border-left: 4px solid var(--accent-soft);
-        background: rgba(255, 255, 255, 0.58);
+        background: rgba(22, 37, 56, 0.95);
       }
 
       @media (max-width: 980px) {
-        .shell {
+        .interactive-grid {
           grid-template-columns: 1fr;
+          padding: 0 10px 10px;
+        }
+
+        .bottom-grid {
+          padding: 0 12px 12px;
         }
 
         #map {
@@ -193,6 +284,17 @@
           <p class="lede">
             A data-driven map built from the UN Global Migration Database workflow, with
             local retrieval over source notes and computed migration summaries.
+          </p>
+          <p class="lede" id="status-text">
+            {% if loading_state == "loading" %}
+            Loading UN data in the background. The page will populate automatically when it is ready.
+            {% elif loading_state == "ready" %}
+            Dataset is ready.
+            {% elif load_error %}
+            Startup note: {{ load_error }}
+            {% else %}
+            Waiting to initialize dataset.
+            {% endif %}
           </p>
           {% if load_error %}
           <p class="lede" style="color: #8f2d1e;">
@@ -217,15 +319,60 @@
               <option value="net_flow_balance">Net Balance</option>
             </select>
           </label>
+          <button id="reload-button" type="button">Refresh UN Data</button>
+          <button id="reset-view-button" type="button">Reset Map View</button>
         </div>
-        <div id="map"></div>
-      </section>
-
-      <aside class="panel sidebar">
+        <div class="interactive-grid">
+          <div class="map-stack">
+            <div id="map"></div>
+          </div>
+        <section class="subpanel detail-rail">
+          <div class="section">
+            <h3>Country Detail</h3>
+            <div id="country-detail-name" class="country-detail-name">No country selected</div>
+            <p class="muted" id="country-detail-text">Click a country on the map to zoom in and see the top origin countries by demographic.</p>
+            <div id="country-chart"></div>
+            <div id="country-top-list" class="list"></div>
+              <div class="table-wrap" id="country-origin-table-wrap" style="display:none;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Origin Country</th>
+                      <th>Both Sexes</th>
+                      <th>Male</th>
+                      <th>Female</th>
+                    </tr>
+                  </thead>
+                  <tbody id="country-origin-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+        <div class="map-stack">
+          <div id="corridor-map"></div>
+        </div>
+        <div class="section">
+          <h3>Ask The Data</h3>
+          <p class="muted">Try: "What were the largest migration corridors in 2020?"</p>
+          <textarea id="question-input" placeholder="Ask about countries, corridors, or a specific year."></textarea>
+          <div class="inline-row" style="margin-top: 10px;">
+            <button id="ask-button">Run RAG Query</button>
+            <span id="ask-status" class="muted"></span>
+          </div>
+          <div id="answer-box" class="list" style="margin-top: 14px;"></div>
+          <div id="context-box" class="contexts"></div>
+        </div>
         <div class="panel-header">
           <h2>Dataset Snapshot</h2>
           <p class="lede">
-            Source page: <a href="{{ metadata.primary_source }}" target="_blank" rel="noreferrer">UN Global Migration Database</a>
+            Preferred source: <a href="{{ metadata.preferred_source }}" target="_blank" rel="noreferrer">UN International Migrant Stock</a>
+          </p>
+          <p class="lede">
+            Fallback sources:
+            <a href="{{ metadata.fallback_sources[1] }}" target="_blank" rel="noreferrer">Migration Flows</a>
+            and
+            <a href="{{ metadata.fallback_sources[2] }}" target="_blank" rel="noreferrer">International Migration</a>
           </p>
         </div>
         <div class="stat-grid">
@@ -238,21 +385,16 @@
             <strong id="record-count">{{ metadata.records }}</strong>
           </div>
         </div>
-        <div class="section">
-          <h3>Top Corridors</h3>
-          <div id="corridor-list" class="list"></div>
-        </div>
-        <div class="section">
-          <h3>Ask The Data</h3>
-          <p class="muted">Try: "What were the largest migration corridors in 2020?"</p>
-          <textarea id="question-input" placeholder="Ask about countries, corridors, or a specific year."></textarea>
-          <div style="margin-top: 10px;">
-            <button id="ask-button">Run RAG Query</button>
+      </section>
+
+      <div class="bottom-grid">
+        <section class="subpanel">
+          <div class="section">
+            <h3>Movement Patterns</h3>
+            <div id="corridor-list" class="list"></div>
           </div>
-          <div id="answer-box" class="list" style="margin-top: 14px;"></div>
-          <div id="context-box" class="contexts"></div>
-        </div>
-      </aside>
+        </section>
+      </div>
     </div>
 
     <script>
@@ -261,10 +403,58 @@
       const corridorList = document.getElementById("corridor-list");
       const questionInput = document.getElementById("question-input");
       const askButton = document.getElementById("ask-button");
+      const reloadButton = document.getElementById("reload-button");
+      const resetViewButton = document.getElementById("reset-view-button");
       const answerBox = document.getElementById("answer-box");
       const contextBox = document.getElementById("context-box");
+      const statusText = document.getElementById("status-text");
+      const askStatus = document.getElementById("ask-status");
+      const countryDetailName = document.getElementById("country-detail-name");
+      const countryDetailText = document.getElementById("country-detail-text");
+      const countryTopList = document.getElementById("country-top-list");
+      const countryOriginTableWrap = document.getElementById("country-origin-table-wrap");
+      const countryOriginTableBody = document.getElementById("country-origin-table-body");
+      let pollHandle = null;
+      let selectedCountryCenter = null;
+      let selectedCountryName = null;
+      let selectedCountryIso = null;
+
+      function setStatus(message) {
+        statusText.textContent = message;
+      }
+
+      async function fetchStatus() {
+        const response = await fetch("/api/status");
+        const payload = await response.json();
+
+        if (payload.state === "loading") {
+          setStatus("Loading UN data in the background. This can take a couple of minutes on the first run.");
+        } else if (payload.state === "ready") {
+          if (payload.mode === "bilateral") {
+            setStatus("Bilateral country-to-country dataset is ready.");
+          } else {
+            setStatus("Destination-country stock dataset is ready.");
+          }
+          if (payload.years?.length && yearSelect.options.length === 0) {
+            yearSelect.innerHTML = payload.years.map((year, index) =>
+              `<option value="${year}" ${index === payload.years.length - 1 ? "selected" : ""}>${year}</option>`
+            ).join("");
+          }
+        } else if (payload.error) {
+          setStatus(payload.error);
+        }
+
+        return payload;
+      }
 
       async function loadMap() {
+        const status = await fetchStatus();
+        if (!status.has_data) {
+          corridorList.innerHTML = `<div class="list-item muted">${status.error || "Dataset is loading."}</div>`;
+          document.getElementById("map").innerHTML = `<div style="padding: 24px;" class="muted">${status.error || "Dataset is loading."}</div>`;
+          return;
+        }
+
         const year = yearSelect.value;
         const metric = metricSelect.value;
         const response = await fetch(`/api/map-data?year=${year}&metric=${metric}`);
@@ -279,52 +469,148 @@
         }
 
         const records = payload.records;
+        const scaleRecords = records.filter(row => row.iso3 !== "USA");
+        const scaleValues = scaleRecords.map(row => Number(row[metric])).filter(value => !Number.isNaN(value));
+        const zmin = scaleValues.length ? Math.min(...scaleValues) : undefined;
+        const zmax = scaleValues.length ? Math.max(...scaleValues) : undefined;
         const titleMap = {
           inbound_total: "Inbound migrant stock",
           outbound_total: "Outbound migrant stock",
           net_flow_balance: "Net migration balance"
         };
 
-        Plotly.newPlot("map", [{
+        const mapTraces = [{
           type: "choropleth",
           locationmode: "ISO-3",
           locations: records.map(row => row.iso3),
           z: records.map(row => row[metric]),
           text: records.map(row => `${row.country}<br>${titleMap[metric]}: ${Number(row[metric]).toLocaleString()}`),
-          colorscale: metric === "net_flow_balance" ? "RdBu" : "YlOrRd",
+          colorscale: metric === "net_flow_balance"
+            ? [
+                [0, "#d66c6c"],
+                [0.5, "#1a2736"],
+                [1, "#62a8eb"]
+              ]
+            : [
+                [0, "#13253a"],
+                [0.25, "#1c3a59"],
+                [0.5, "#295885"],
+                [0.75, "#3f7fbf"],
+                [1, "#77b8f2"]
+              ],
           marker: {
             line: {
-              color: "rgba(255,255,255,0.5)",
-              width: 0.4
+              color: "rgba(122, 151, 178, 0.68)",
+              width: 0.6
             }
           },
           colorbar: {
-            title: titleMap[metric]
+            title: titleMap[metric],
+            thickness: 14,
+            outlinewidth: 0,
+            tickcolor: "#dce7f2",
+            tickfont: {color: "#dce7f2"},
+            titlefont: {color: "#dce7f2"}
           },
+          zmin,
+          zmax,
           hovertemplate: "%{text}<extra></extra>"
-        }], {
+        }];
+
+        if (selectedCountryCenter && selectedCountryName && selectedCountryIso) {
+          mapTraces.push({
+            type: "choropleth",
+            locationmode: "ISO-3",
+            locations: [selectedCountryIso],
+            z: [1],
+            showscale: false,
+            colorscale: [[0, "rgba(244,251,255,0.12)"], [1, "rgba(244,251,255,0.12)"]],
+            marker: {
+              line: {
+                color: "#f4fbff",
+                width: 3.4
+              }
+            },
+            hoverinfo: "skip"
+          });
+
+          mapTraces.push({
+            type: "scattergeo",
+            mode: "markers+text",
+            lon: [selectedCountryCenter[1]],
+            lat: [selectedCountryCenter[0]],
+            text: [selectedCountryName],
+            textposition: "top center",
+            marker: {size: 10, color: "#dce7f2"},
+            hoverinfo: "skip"
+          });
+        }
+
+        Plotly.newPlot("map", mapTraces, {
           margin: {l: 0, r: 0, t: 0, b: 0},
           paper_bgcolor: "rgba(0,0,0,0)",
+          plot_bgcolor: "rgba(0,0,0,0)",
           geo: {
             scope: "world",
-            projection: {type: "natural earth"},
+            projection: selectedCountryCenter ? {type: "natural earth", scale: 4.2} : {type: "natural earth"},
+            center: selectedCountryCenter ? {lat: selectedCountryCenter[0], lon: selectedCountryCenter[1]} : undefined,
             showland: true,
-            landcolor: "#fbf7ec",
+            landcolor: "#233746",
             showcountries: true,
-            countrycolor: "rgba(20,40,29,0.2)",
+            countrycolor: "#5f7994",
+            countrywidth: 0.6,
+            showcoastlines: true,
+            coastlinecolor: "#5f7994",
+            coastlinewidth: 0.7,
+            showsubunits: true,
+            subunitcolor: "rgba(125,153,181,0.5)",
+            subunitwidth: 0.4,
             showocean: true,
-            oceancolor: "#dfe9ef",
-            bgcolor: "rgba(0,0,0,0)"
+            oceancolor: "#16334d",
+            showlakes: true,
+            lakecolor: "#16334d",
+            bgcolor: "#12273a"
           }
         }, {responsive: true});
+        document.getElementById("map").on("plotly_click", handleMapClick);
 
         renderCorridors(payload.top_corridors || []);
+        renderCorridorChart(payload.top_corridors || [], payload.mode);
+      }
+
+      async function handleMapClick(event) {
+        const point = event?.points?.[0];
+        if (!point || !point.text) {
+          return;
+        }
+        const countryName = point.text.split("<br>")[0];
+        await loadCountryDetail(countryName, point.location || null);
+      }
+
+      async function loadCountryDetail(countryName, countryIso = null) {
+        const year = yearSelect.value;
+        countryDetailName.textContent = countryName;
+        countryDetailText.textContent = `Loading details for ${countryName}...`;
+        const response = await fetch(`/api/country?country=${encodeURIComponent(countryName)}&year=${year}`);
+        const payload = await response.json();
+        if (!response.ok) {
+          countryDetailText.textContent = payload.error || `Could not load details for ${countryName}.`;
+          return;
+        }
+
+        selectedCountryName = payload.country;
+        selectedCountryIso = countryIso;
+        selectedCountryCenter = payload.center || null;
+        countryDetailName.textContent = payload.country;
+        countryDetailText.textContent = `Top outside origin countries for ${payload.country} in ${payload.year}, split by demographic.`;
+        renderCountryBreakdown(payload);
+        await loadMap();
       }
 
       function renderCorridors(corridors) {
         corridorList.innerHTML = "";
         if (!corridors.length) {
-          corridorList.innerHTML = '<div class="list-item muted">Select a specific year to see the largest normalized corridors.</div>';
+          corridorList.innerHTML = '<div class="list-item muted">Upload or auto-load a bilateral origin-destination workbook to see country-to-country corridors here.</div>';
           return;
         }
 
@@ -336,36 +622,211 @@
         });
       }
 
-      async function askQuestion() {
-        const question = questionInput.value.trim();
-        if (!question) {
+      function renderCorridorChart(corridors, mode) {
+        const chart = document.getElementById("corridor-map");
+        if (mode !== "bilateral" || !corridors.length) {
+          chart.innerHTML = '<div style="padding: 24px;" class="muted">Country-to-country movement patterns need a bilateral UN workbook, such as the "Destination and origin" file from the International Migrant Stock page.</div>';
           return;
         }
 
-        const response = await fetch("/api/ask", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({question})
-        });
-        const payload = await response.json();
+        const labels = [];
+        const labelIndex = new Map();
+        function getIndex(label) {
+          if (!labelIndex.has(label)) {
+            labelIndex.set(label, labels.length);
+            labels.push(label);
+          }
+          return labelIndex.get(label);
+        }
 
-        answerBox.innerHTML = `<div class="list-item">${payload.answer || payload.error}</div>`;
+        const source = [];
+        const target = [];
+        const value = [];
+        corridors.forEach(item => {
+          source.push(getIndex(item.origin));
+          target.push(getIndex(item.destination));
+          value.push(item.value);
+        });
+
+        Plotly.newPlot("corridor-map", [{
+          type: "sankey",
+          arrangement: "snap",
+          node: {
+            pad: 12,
+            thickness: 12,
+            line: {color: "rgba(207,225,243,0.12)", width: 0.5},
+            label: labels,
+            color: "#5aa2e6"
+          },
+          link: {
+            source,
+            target,
+            value,
+            color: "rgba(90,162,230,0.26)"
+          }
+        }], {
+          margin: {l: 96, r: 96, t: 24, b: 20},
+          paper_bgcolor: "rgba(0,0,0,0)",
+          font: {family: '"Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif', size: 10, color: "#e7eef6"},
+          title: {text: "Top Country-to-Country Movement Patterns", font: {size: 18}}
+        }, {responsive: true});
+      }
+
+      function renderCountryBreakdown(payload) {
+        countryTopList.innerHTML = "";
+        const groups = payload.demographics || {};
+        const both = groups["both sexes"] || [];
+        const male = groups["male"] || [];
+        const female = groups["female"] || [];
+
+        [["Both sexes", both], ["Male", male], ["Female", female]].forEach(([label, rows]) => {
+          const top = rows[0];
+          const node = document.createElement("div");
+          node.className = "list-item";
+          node.innerHTML = top
+            ? `<strong>${label}</strong><div>${top.origin}</div><div class="muted">${Number(top.value).toLocaleString()}</div>`
+            : `<strong>${label}</strong><div class="muted">No data available.</div>`;
+          countryTopList.appendChild(node);
+        });
+
+        const maleMap = new Map(male.map(row => [row.origin, row.value]));
+        const femaleMap = new Map(female.map(row => [row.origin, row.value]));
+        countryOriginTableBody.innerHTML = "";
+        both.forEach(row => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${row.origin}</td>
+            <td>${Number(row.value).toLocaleString()}</td>
+            <td>${Number(maleMap.get(row.origin) || 0).toLocaleString()}</td>
+            <td>${Number(femaleMap.get(row.origin) || 0).toLocaleString()}</td>
+          `;
+          countryOriginTableBody.appendChild(tr);
+        });
+        countryOriginTableWrap.style.display = both.length ? "block" : "none";
+
+        Plotly.newPlot("country-chart", [
+          {
+            type: "bar",
+            orientation: "h",
+            name: "Both sexes",
+            y: both.slice(0, 12).map(row => row.origin).reverse(),
+            x: both.slice(0, 12).map(row => row.value).reverse(),
+            marker: {color: "#5aa2e6"}
+          },
+          {
+            type: "bar",
+            orientation: "h",
+            name: "Male",
+            y: male.slice(0, 12).map(row => row.origin).reverse(),
+            x: male.slice(0, 12).map(row => row.value).reverse(),
+            marker: {color: "#77b8f2"}
+          },
+          {
+            type: "bar",
+            orientation: "h",
+            name: "Female",
+            y: female.slice(0, 12).map(row => row.origin).reverse(),
+            x: female.slice(0, 12).map(row => row.value).reverse(),
+            marker: {color: "#aacff7"}
+          }
+        ], {
+          barmode: "group",
+          margin: {l: 140, r: 20, t: 20, b: 40},
+          paper_bgcolor: "rgba(0,0,0,0)",
+          plot_bgcolor: "rgba(20,33,49,0.9)",
+          font: {family: '"Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif', size: 12, color: "#e7eef6"},
+          xaxis: {title: "Migrants", gridcolor: "rgba(159,176,194,0.15)", zerolinecolor: "rgba(159,176,194,0.2)"},
+          yaxis: {automargin: true, gridcolor: "rgba(159,176,194,0.08)"}
+        }, {responsive: true});
+      }
+
+      async function askQuestion() {
+        const question = questionInput.value.trim();
+        if (!question) {
+          askStatus.textContent = "Enter a question first.";
+          return;
+        }
+
+        askButton.disabled = true;
+        askStatus.textContent = "Running query...";
+        answerBox.innerHTML = '<div class="list-item muted">Retrieving grounded context and building an answer...</div>';
         contextBox.innerHTML = "";
 
-        (payload.contexts || []).forEach(context => {
-          const node = document.createElement("div");
-          node.className = "context";
-          const source = context.source ? `<div class="muted">${context.source}</div>` : "";
-          node.innerHTML = `<div>${context.text}</div>${source}`;
-          contextBox.appendChild(node);
-        });
+        try {
+          const response = await fetch("/api/ask", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({question})
+          });
+          const payload = await response.json();
+
+          answerBox.innerHTML = `<div class="list-item">${payload.answer || payload.error}</div>`;
+          contextBox.innerHTML = "";
+
+          (payload.contexts || []).forEach(context => {
+            const node = document.createElement("div");
+            node.className = "context";
+            const source = context.source ? `<div class="muted">${context.source}</div>` : "";
+            node.innerHTML = `<div>${context.text}</div>${source}`;
+            contextBox.appendChild(node);
+          });
+          askStatus.textContent = response.ok ? "Done." : "Query failed.";
+        } catch (error) {
+          answerBox.innerHTML = `<div class="list-item">Could not run the query: ${error.message}</div>`;
+          askStatus.textContent = "Query failed.";
+        } finally {
+          askButton.disabled = false;
+        }
+      }
+
+      async function refreshData() {
+        await fetch("/api/reload", {method: "POST"});
+        setStatus("Refreshing data from the UN source in the background.");
+        selectedCountryCenter = null;
+        selectedCountryName = null;
+        selectedCountryIso = null;
+        countryDetailName.textContent = "No country selected";
+        startPolling();
+      }
+
+      function startPolling() {
+        if (pollHandle) {
+          clearInterval(pollHandle);
+        }
+        pollHandle = setInterval(async () => {
+          const status = await fetchStatus();
+          if (status.has_data) {
+            clearInterval(pollHandle);
+            pollHandle = null;
+            await loadMap();
+          }
+        }, 3000);
       }
 
       yearSelect.addEventListener("change", loadMap);
       metricSelect.addEventListener("change", loadMap);
       askButton.addEventListener("click", askQuestion);
+      questionInput.addEventListener("keydown", (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+          askQuestion();
+        }
+      });
+      reloadButton.addEventListener("click", refreshData);
+      resetViewButton.addEventListener("click", async () => {
+        selectedCountryCenter = null;
+        selectedCountryName = null;
+        selectedCountryIso = null;
+        countryDetailName.textContent = "No country selected";
+        countryDetailText.textContent = "Click a country on the map to zoom in and see the top origin countries by demographic.";
+        countryTopList.innerHTML = "";
+        countryOriginTableBody.innerHTML = "";
+        countryOriginTableWrap.style.display = "none";
+        document.getElementById("country-chart").innerHTML = "";
+        await loadMap();
+      });
 
       loadMap();
+      startPolling();
     </script>
   </body>
 </html>
