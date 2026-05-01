@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UN Migration RAG Explorer</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <style>
+      :root {
+        --bg: #eef2e3;
+        --panel: rgba(253, 250, 241, 0.95);
+        --ink: #14281d;
+        --muted: #52625b;
+        --accent: #bf4e30;
+        --accent-soft: #e8b08b;
+        --line: rgba(20, 40, 29, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(191, 78, 48, 0.18), transparent 24%),
+          radial-gradient(circle at bottom right, rgba(31, 76, 58, 0.18), transparent 28%),
+          linear-gradient(180deg, #f5efe0 0%, var(--bg) 100%);
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
+        gap: 20px;
+        min-height: 100vh;
+        padding: 24px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(20, 40, 29, 0.08);
+        overflow: hidden;
+      }
+
+      .panel-header {
+        padding: 22px 24px 12px;
+      }
+
+      h1, h2, h3 {
+        margin: 0;
+        font-weight: 600;
+      }
+
+      h1 {
+        font-size: clamp(1.9rem, 2.8vw, 3rem);
+      }
+
+      .lede {
+        margin-top: 10px;
+        color: var(--muted);
+        line-height: 1.5;
+        max-width: 70ch;
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 0 24px 18px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      select, input, button, textarea {
+        font: inherit;
+      }
+
+      select, textarea {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: #fffdf8;
+        color: var(--ink);
+      }
+
+      button {
+        border: 0;
+        border-radius: 12px;
+        background: var(--accent);
+        color: white;
+        padding: 11px 15px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        filter: brightness(1.05);
+      }
+
+      #map {
+        min-height: 680px;
+      }
+
+      .sidebar {
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        padding: 0 24px 18px;
+      }
+
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.6);
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 1.2rem;
+        margin-top: 8px;
+      }
+
+      .section {
+        border-top: 1px solid var(--line);
+        padding: 18px 24px 24px;
+      }
+
+      .list {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .list-item {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.56);
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 90px;
+        resize: vertical;
+      }
+
+      .contexts {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .context {
+        padding: 12px;
+        border-left: 4px solid var(--accent-soft);
+        background: rgba(255, 255, 255, 0.58);
+      }
+
+      @media (max-width: 980px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        #map {
+          min-height: 480px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <section class="panel">
+        <div class="panel-header">
+          <h1>UN Migration RAG Explorer</h1>
+          <p class="lede">
+            A data-driven map built from the UN Global Migration Database workflow, with
+            local retrieval over source notes and computed migration summaries.
+          </p>
+          {% if load_error %}
+          <p class="lede" style="color: #8f2d1e;">
+            Startup note: {{ load_error }}
+          </p>
+          {% endif %}
+        </div>
+        <div class="controls">
+          <label>
+            Year
+            <select id="year-select">
+              {% for year in years %}
+              <option value="{{ year }}" {% if loop.last %}selected{% endif %}>{{ year }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Metric
+            <select id="metric-select">
+              <option value="inbound_total" selected>Inbound Total</option>
+              <option value="outbound_total">Outbound Total</option>
+              <option value="net_flow_balance">Net Balance</option>
+            </select>
+          </label>
+        </div>
+        <div id="map"></div>
+      </section>
+
+      <aside class="panel sidebar">
+        <div class="panel-header">
+          <h2>Dataset Snapshot</h2>
+          <p class="lede">
+            Source page: <a href="{{ metadata.primary_source }}" target="_blank" rel="noreferrer">UN Global Migration Database</a>
+          </p>
+        </div>
+        <div class="stat-grid">
+          <div class="stat">
+            Years
+            <strong id="years-count">{{ years|length }}</strong>
+          </div>
+          <div class="stat">
+            Bilateral Records
+            <strong id="record-count">{{ metadata.records }}</strong>
+          </div>
+        </div>
+        <div class="section">
+          <h3>Top Corridors</h3>
+          <div id="corridor-list" class="list"></div>
+        </div>
+        <div class="section">
+          <h3>Ask The Data</h3>
+          <p class="muted">Try: "What were the largest migration corridors in 2020?"</p>
+          <textarea id="question-input" placeholder="Ask about countries, corridors, or a specific year."></textarea>
+          <div style="margin-top: 10px;">
+            <button id="ask-button">Run RAG Query</button>
+          </div>
+          <div id="answer-box" class="list" style="margin-top: 14px;"></div>
+          <div id="context-box" class="contexts"></div>
+        </div>
+      </aside>
+    </div>
+
+    <script>
+      const yearSelect = document.getElementById("year-select");
+      const metricSelect = document.getElementById("metric-select");
+      const corridorList = document.getElementById("corridor-list");
+      const questionInput = document.getElementById("question-input");
+      const askButton = document.getElementById("ask-button");
+      const answerBox = document.getElementById("answer-box");
+      const contextBox = document.getElementById("context-box");
+
+      async function loadMap() {
+        const year = yearSelect.value;
+        const metric = metricSelect.value;
+        const response = await fetch(`/api/map-data?year=${year}&metric=${metric}`);
+        const payload = await response.json();
+
+        if (!response.ok) {
+          corridorList.innerHTML = `<div class="list-item muted">${payload.error || "Map data is unavailable."}</div>`;
+          answerBox.innerHTML = "";
+          contextBox.innerHTML = "";
+          document.getElementById("map").innerHTML = `<div style="padding: 24px;" class="muted">${payload.error || "Map data is unavailable."}</div>`;
+          return;
+        }
+
+        const records = payload.records;
+        const titleMap = {
+          inbound_total: "Inbound migrant stock",
+          outbound_total: "Outbound migrant stock",
+          net_flow_balance: "Net migration balance"
+        };
+
+        Plotly.newPlot("map", [{
+          type: "choropleth",
+          locationmode: "ISO-3",
+          locations: records.map(row => row.iso3),
+          z: records.map(row => row[metric]),
+          text: records.map(row => `${row.country}<br>${titleMap[metric]}: ${Number(row[metric]).toLocaleString()}`),
+          colorscale: metric === "net_flow_balance" ? "RdBu" : "YlOrRd",
+          marker: {
+            line: {
+              color: "rgba(255,255,255,0.5)",
+              width: 0.4
+            }
+          },
+          colorbar: {
+            title: titleMap[metric]
+          },
+          hovertemplate: "%{text}<extra></extra>"
+        }], {
+          margin: {l: 0, r: 0, t: 0, b: 0},
+          paper_bgcolor: "rgba(0,0,0,0)",
+          geo: {
+            scope: "world",
+            projection: {type: "natural earth"},
+            showland: true,
+            landcolor: "#fbf7ec",
+            showcountries: true,
+            countrycolor: "rgba(20,40,29,0.2)",
+            showocean: true,
+            oceancolor: "#dfe9ef",
+            bgcolor: "rgba(0,0,0,0)"
+          }
+        }, {responsive: true});
+
+        renderCorridors(payload.top_corridors || []);
+      }
+
+      function renderCorridors(corridors) {
+        corridorList.innerHTML = "";
+        if (!corridors.length) {
+          corridorList.innerHTML = '<div class="list-item muted">Select a specific year to see the largest normalized corridors.</div>';
+          return;
+        }
+
+        corridors.forEach(item => {
+          const node = document.createElement("div");
+          node.className = "list-item";
+          node.innerHTML = `<strong>${item.origin} -> ${item.destination}</strong><div class="muted">${Number(item.value).toLocaleString()}</div>`;
+          corridorList.appendChild(node);
+        });
+      }
+
+      async function askQuestion() {
+        const question = questionInput.value.trim();
+        if (!question) {
+          return;
+        }
+
+        const response = await fetch("/api/ask", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({question})
+        });
+        const payload = await response.json();
+
+        answerBox.innerHTML = `<div class="list-item">${payload.answer || payload.error}</div>`;
+        contextBox.innerHTML = "";
+
+        (payload.contexts || []).forEach(context => {
+          const node = document.createElement("div");
+          node.className = "context";
+          const source = context.source ? `<div class="muted">${context.source}</div>` : "";
+          node.innerHTML = `<div>${context.text}</div>${source}`;
+          contextBox.appendChild(node);
+        });
+      }
+
+      yearSelect.addEventListener("change", loadMap);
+      metricSelect.addEventListener("change", loadMap);
+      askButton.addEventListener("click", askQuestion);
+
+      loadMap();
+    </script>
+  </body>
+</html>
