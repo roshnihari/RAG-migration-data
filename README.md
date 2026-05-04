@@ -1,13 +1,11 @@
 # RAG Migration Data
 
-This repo contains a small Flask app that:
+Pulls raw migration data from the UN Global Migration Database workflow.
+Normalizes bilateral migration records into a country-to-country format.
+Builds a lightweight local RAG layer over source notes and computed summaries.
+Serves an interactive global migration web map with year and metric filters.
 
-1. Pulls raw migration data from the UN Global Migration Database workflow.
-2. Normalizes bilateral migration records into a country-to-country format.
-3. Builds a lightweight local RAG layer over source notes and computed summaries.
-4. Serves an interactive global migration web map with year and metric filters.
-
-## Project layout
+## layout
 
 - `app.py`: Flask server and API routes
 - `data_pipeline.py`: UN data discovery, download, parsing and normalization
@@ -15,19 +13,7 @@ This repo contains a small Flask app that:
 - `templates/index.html`: interactive Plotly world map and RAG UI
 - `requirements.txt`: Python dependencies
 
-## Quick start
-
-```bash
-cd <location of Python projects>
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python app.py
-```
-
-Then open [http://127.0.0.1:5000](http://127.0.0.1:5000).
-
-## How it works
+[http://127.0.0.1:5000](http://127.0.0.1:5000).
 
 The original Global Migration Database page is currently returning CloudFront `403` responses in some environments, so the loader prefers the accessible UN data pages first:
 
