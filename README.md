@@ -1,9 +1,15 @@
+
+
+<img width="2450" height="1267" alt="Screenshot 2026-05-04 at 10 57 55 AM" src="https://github.com/user-attachments/assets/4f443e56-5afa-439a-baef-20363d6be976" />
+
 # RAG Migration Data
 
 Pulls raw migration data from the UN Global Migration Database workflow.
 Normalizes bilateral migration records into a country-to-country format.
 Builds a lightweight local RAG layer over source notes and computed summaries.
 Serves an interactive global migration web map with year and metric filters.
+
+<img width="2454" height="763" alt="Screenshot 2026-05-04 at 11 02 47 AM" src="https://github.com/user-attachments/assets/391ad821-9ef5-4fc8-b40b-6cc98e767c78" />
 
 ## layout
 
