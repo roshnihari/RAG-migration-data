@@ -27,7 +27,7 @@ FALLBACK_PAGES = [
     "https://www.un.org/development/desa/pd/content/international-migration-1",
 ]
 LOCAL_DATASET_CANDIDATES = [
-    Path("/Users/roshnihari/Downloads/undesa_pd_2024_ims_stock_by_sex_destination_and_origin.xlsx"),
+    Path("/undesa_pd_2024_ims_stock_by_sex_destination_and_origin.xlsx"),
 ]
 
 DOWNLOAD_PATTERN = re.compile(r"\.(xlsx|xls|csv|zip)$", re.IGNORECASE)
