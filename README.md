@@ -44,3 +44,5 @@ The app then:
 - The UN site may change workbook names or schema over time, so the parser uses heuristics instead of fixed column positions.
 - If the data source cannot be downloaded at startup, the UI will show the loader error rather than crashing.
 - The current map is a choropleth view of country-level migration totals. The sidebar also exposes the largest corridors for the selected year.
+
+
